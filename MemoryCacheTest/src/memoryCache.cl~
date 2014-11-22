@@ -1,0 +1,65 @@
+#define repeat32(S)  S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S
+
+#define repeat64(S)  S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S
+
+#define repeat128(S)  S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S
+
+#define repeat256(S)  S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S
+
+#define repeat512(S)  S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S
+
+#pragma OPENCL EXTENSION cl_khr_global_int32_base_atomics : enable
+
+
+__kernel void MemCache(__global int*  array, 
+					   int n)
+{
+
+	int gid = get_global_id(0);
+  	int i = 0;
+    int j = array[gid];
+
+	repeat512(j = array[j];)
+
+	array[n] = j;
+
+}
+
+__kernel void ConMemCache(__constant int*  array, 
+						  __global int* out,
+					   int n)
+{
+
+	int gid = get_global_id(0);
+  	int i = 0;
+        int j = array[gid];
+
+	repeat512(j = array[j];)
+
+	out[0] = j;
+
+}
+
+__kernel void LocalMemCache(__global int* array,
+							int n)
+{
+	int gid = get_global_id(0);
+	int i = 0;
+	__local int stride[1024];
+	/*
+	for(i = 0; i < n; i++) {
+		stride[i] = array[i];
+	}
+	*/
+	stride[gid*2] = array[gid*2];
+	stride[gid*2 + 1] = array[gid*2 + 1];
+	barrier(CLK_LOCAL_MEM_FENCE);
+
+	int j = 0;
+	if(gid == 0)
+		repeat512(j = stride[j];)
+
+	array[n] = j;
+}
+
+

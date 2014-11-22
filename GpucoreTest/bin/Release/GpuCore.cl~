@@ -1,0 +1,14 @@
+__kernel void gpuCoreTest(__global const float* a, __global const float* b, __global float* c, int iNumElements)
+{
+	int id = get_global_id(0); 
+	int blocksize =65536/iNumElements ; 
+
+	for (int iy = 0; iy < 100; iy++) {
+		for(int i0 = id * blocksize ; i0 < (id + 1) * blocksize ; i0++){
+			c[i0]=a[i0]+b[i0];
+		}
+	}
+}
+
+
+    
